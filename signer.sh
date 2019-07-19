@@ -1,7 +1,7 @@
-androidCommandPath="/Users/lichuanwu/sdk/build-tools/27.0.3/"
-
-findPath="." # 要搜索的目录，默认为当前目录
 configPath=signerConfig.ini # 配置文件的名称
+
+androidCommandPath="" # Android sdk 
+findPath="." # 要搜索的目录，默认为当前目录
 storeFile="" # 签名文件的路径
 storePassword="" # 签名文件的密码
 keyAlias="" # key的别名
@@ -24,17 +24,20 @@ function findConfigFile()
         storePassword=`cat $configPath | grep storePassword | awk -F'=' '{ print $2 }' | sed s/[[:space:]]//g`
         keyAlias=`cat $configPath | grep keyAlias | awk -F'=' '{ print $2 }' | sed s/[[:space:]]//g`
         keyPassword=`cat $configPath | grep keyPassword | awk -F'=' '{ print $2 }' | sed s/[[:space:]]//g`
+        androidCommandPath=`cat $configPath | grep buildTools | awk -F'=' '{ print $2 }' | sed s/[[:space:]]//g`
         auto=`cat $configPath | grep auto | awk -F'=' '{ print $2 }' | sed s/[[:space:]]//g`
         configSearchPath=`cat $configPath | grep searchPath | awk -F'=' '{ print $2 }' | sed s/[[:space:]]//g`
         configOutPath=`cat $configPath | grep outPath | awk -F'=' '{ print $2 }' | sed s/[[:space:]]//g`
     else
         echo -e "\n当前目录下找不到配置文件${configPath},需要手动输入账号和密码，\n强烈建议在当前目录下创建${configPath}配置文件\n"
 
-        read -e -p "第1步(共4部)请输入签名文件地址:" storeFile
-        read -p "第2步(共4部)请输入签名密码:" -s storePassword    
+        read -e -p "第1步(共5部)请输入签名文件地址:" storeFile
+        read -p "第2步(共5部)请输入签名密码:" -s storePassword    
         echo ""
-        read -p "第3部(共4部)请输入key的别名:" keyAlias
-        read -p "第4部(共4部)请输入key的密码:" -s keyPassword
+        read -p "第3部(共5部)请输入key的别名:" keyAlias
+        read -p "第4部(共5部)请输入key的密码:" -s keyPassword
+        echo ""
+        read -e -p "第5步(共5部)请输入build-tools路径:" androidCommandPath
 
     fi
 }
@@ -70,7 +73,7 @@ function signAndroidApk()
             let errorTimes++
         else
             # 创建输出的目录
-            if [[ -z "${outputPath}" ]]; then  # outputPath的值为空
+            if [[ -z "$outputPath" ]]; then  # outputPath的值为空
                 outputPath=${apkPath}/out
                 if [ ! -d "$outputPath" ]; then
                     mkdir -p $outputPath
@@ -81,7 +84,7 @@ function signAndroidApk()
                 mkdir -p $outputPath
 
                 # 创建目录失败
-                if [[ ! -d "${outputPath}" ]]; then
+                if [[ ! -d "$outputPath" ]]; then
                     echo 创建${outputPath}目录失败，则输出到apk所在目录的out目录
                     outputPath=${apkPath}/out
                     if [ ! -d "$outputPath" ]; then
@@ -89,12 +92,30 @@ function signAndroidApk()
                     fi
                 fi
             fi
-            
+
+            # 检查命令行目录是否存在
+            if [[ ! -d "${androidCommandPath}" ]]; then
+                echo -e "\n错误！配置的build-tools路径找不到，请检查${configPath}文件中buildTools的设置\n"
+                exit 0
+            fi
+            # 检查zipalign命令是否存在
+            zipalign=$androidCommandPath/zipalign
+            if [[ ! -f "$zipalign" ]]; then
+                echo -e "\n错误！${zipalign} 命令找不到\n"
+                exit 0
+            fi
+            # 检查apksigner命令是否存在
+            apksigner=$androidCommandPath/apksigner
+            if [[ ! -f "$apksigner" ]]; then
+                echo -e "\n错误！${apksigner} 命令找不到，apksigner命令在build-tools 25.0.0才出现\n"
+                exit 0
+            fi
+
             zipalignApk="$outputPath/zipalign-$apkName"
-            signerApk="$outputPath/signer-$apkName"
-    
+            signerApk="$outputPath/signer-$apkName" 
+
             # 开始4K对齐
-            $androidCommandPath/zipalign -f 4 $sourceApk $zipalignApk
+            $zipalign -f 4 $sourceApk $zipalignApk
             
             if [[ ! -f "$zipalignApk"  || ! -s "${zipalignApk}" ]];then # 对齐完的apk不是一个文件，或者大小为0kb
                 echo "注意啦！第${tatalTimes}个apk 4K对齐失败${zipalignApk}"
@@ -102,7 +123,7 @@ function signAndroidApk()
                 rm -f $zipalignApk
             else
                 # 4K对齐成功，开始V2签名
-                $androidCommandPath/apksigner sign --ks $storeFile --ks-pass pass:$storePassword --ks-key-alias $keyAlias --key-pass pass:$keyPassword --out $signerApk $zipalignApk
+                $apksigner sign --ks $storeFile --ks-pass pass:$storePassword --ks-key-alias $keyAlias --key-pass pass:$keyPassword --out $signerApk $zipalignApk
                 # 签名完，删除对齐过程中生成的apk
                 rm -f $zipalignApk
                 if [  -f "$zipalignApk" ];then
@@ -129,49 +150,51 @@ function signAndroidApk()
 function getApk()
 {
     # 如果配置的目录不为空，并且该目录存在
-    if [[ -n "${configSearchPath}" && -d ${configSearchPath} ]]; then
+    if [[ -n "$configSearchPath" && -d "$configSearchPath" ]]; then
         findPath=$configSearchPath
     else
         echo -e "\n由于searchPath=${configSearchPath}目录不存在或者没有配置searchPath的值，则默认在当前目录搜索apk"
         findPath="."
     fi
 
-    if [[ "$auto" == "false" ]]; then
-        echo -e "\n由于您在${configPath}设置了auto=false，或者使用了auto默认值，所以开启了手动选择功能……"
-        echo "如果想自动搜索目录下的apk，请在${configPath}中配置auto=true"
-        #选择
+    if [[ "$auto" == "true" ]]; then
+        # 1、自动搜索apk
+        echo -e "\n${configPath}中设置auto=true，开始自动搜索${findPath}目录"
+        findApk $findPath "*.apk"
+    elif [[ "$auto" == "false" ]]; then
+         # 2、手动指定apk路径
+        echo -e "\n${configPath}中设置auto=false，需要手动输入apk路径"
+        echo -e "如果想自动搜索目录下的apk，请在${configPath}中配置auto=true\n"
+        
+        read -p "请输入要签名apk的路径：" -e inputApkPath
+        findApkArray[0]=$inputApkPath #手动指定apk
+    else
+        # auto!=false或者auto!=true，就会执行这里
+        echo -e "\n---------------警告----------------"
+        echo -e "${configPath}配置中auto=${auto}，需要选择要执行的的方式，
+                \n如果配置auto=true则自动搜索，auto=false则手动输入。"
+        echo -e "---------------警告----------------\n"
+        
+        # 选择方式
         echo ""
         read -n1 -p "是否自动搜索指定目录(如果没指定搜索目录，默认搜索当前目录)下的apk，否则要手动指定apk路径, [Y/N]?" answer
         case $answer in
         Y | y)
-            # 1、自动搜索apk
+            # 3、自动搜索apk
             echo -e "\n开始自动搜索${findPath}目录下的apk"
             findApk $findPath "*.apk" 
             ;;
         N | n)
-            # 2、手动指定apk路径
+            # 4、手动指定apk路径
             echo -e "\n"
             read -p "请输入要签名apk的路径：" -e inputApkPath
             findApkArray[0]=$inputApkPath 
             ;;
         *)
             echo -e "\n"
-            echo "选择错误:$answer";;
+            echo "选择错误:$answer"
+            ;;
         esac
-
-    elif [[ "$auto" == "true" ]]; then
-      # 3、自动搜索apk
-      echo -e "\n您设置了auto=true，开启了自动搜索功能……"
-      findApk $findPath "*.apk"
-    else
-        # 4、手动指定apk路径（auto!=false或者auto!=true，就会执行这里）
-        echo -e "\n---------------警告----------------"
-        echo -e "${configPath}配置中auto=${auto}，则需要手动输入要签名的apk的地址，
-                \n如果配置auto=false则开启手动选择，auto=true则开启自动搜索。"
-        echo -e "---------------警告----------------\n"
-
-        read -p "请输入要签名apk的路径：" -e inputApkPath
-        findApkArray[0]=$inputApkPath #手动指定apk
     fi
 }
 
@@ -207,8 +230,5 @@ function processApk()
 
 
 
-
-
-
-
+ 
 
