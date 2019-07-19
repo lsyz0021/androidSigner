@@ -37,7 +37,7 @@ outPath=./out
 这里我们输入`n`，就需要我们手动指定apk的路径了
 **注意**：如果`auto=false`，相当于输入了`n`
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190719205807907.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xzeXowMDIx,size_16,color_FFFFFF,t_70)
-[GitHub地址 https://github.com/lsyz0021/androidSigner.git](https://github.com/lsyz0021/androidSigner.git)
+[GitHub地址 https://github.com/lsyz0021/androidSigner](https://github.com/lsyz0021/androidSigner)
 
 
 
