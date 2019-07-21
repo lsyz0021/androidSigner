@@ -1,21 +1,21 @@
+
 **转载请标注原创地址：[https://blog.csdn.net/lsyz0021/article/details/96499543](https://blog.csdn.net/lsyz0021/article/details/96499543)**
 
 [GitHub地址 https://github.com/lsyz0021/androidSigner](https://github.com/lsyz0021/androidSigner)
 
 一提到给apk签名，大家或许想这还不简单，打开终端配置好“apksigner”命令一行不就搞定了，但是如果让你给100个apk签名，这样的签名方式还简单吗？
 因为最近有经常要给apk签名的需要，并且有时候可能要同时给十几个apk签名，所以就想到了写个批量v2签名的shell脚本，写完之后使用感觉起来感觉也特别方便。想到或许其他人也可能会有这种需求，于是将他开源出来供大家使用。废话不多说先介绍功能！先使用
-
 **特点：**
 
 1、一键批量签名
 
 2、可选配置项丰富
 
-3、长期维护
+3、安全（担心配置文件泄露密码，密码为空即手动输入）
+
+4、长期维护
 
 ## 1、使用方式
-
-
 ```shell
 #打开终端，克隆项目
 git clone https://github.com/lsyz0021/androidSigner.git
@@ -66,7 +66,16 @@ outPath=./out
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190719205807907.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xzeXowMDIx,size_16,color_FFFFFF,t_70)
 根据自己的需求配置`signerConfig.ini`，即可灵活使用了。
 
+## 6、不配置密码
+如果你担心配置文件中的密码被泄露，完全可以手动输入，这样很好的避免了密码外泄。**（甚至你都可以删除配置文件）**
+配置文件中设置`storePassword=`、`keyPassword=`都是设置为空，这样就可以手动输入密码了。
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190721184510999.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xzeXowMDIx,size_16,color_FFFFFF,t_70)
+
+## 7、删除配置文件
+如果你认为使用配置文件太累赘，也可以删除他，然后手动配置选项。
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190721185914724.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xzeXowMDIx,size_16,color_FFFFFF,t_70)
 [GitHub地址 https://github.com/lsyz0021/androidSigner](https://github.com/lsyz0021/androidSigner)
+
 
 
 

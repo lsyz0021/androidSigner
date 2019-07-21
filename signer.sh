@@ -7,7 +7,7 @@ storePassword="" # 签名文件的密码
 keyAlias="" # key的别名
 keyPassword="" # key的密码
 
-auto="false" # 是否自动搜索
+auto="no" # 是否自动搜索
 repeatSigner="false" # 是否重复签名，，已完成签名的apk名字上会加个“signer”，true：会再签名，false：不会再签名
 searchKey="*.apk"
 configSearchPath="" # 指定搜索的目录，不指定默认问当前目录
@@ -60,6 +60,25 @@ function getConfigFileInfo()
     if [[ ! -f "$apksigner" ]]; then
         echo -e "\n错误！${apksigner} 命令找不到，apksigner命令在build-tools 25.0.0才出现\n"
         exit 0
+    fi
+
+    if [[ -z "$storeFile" ]]; then
+        echo "请输入签名文件地址:"
+        read -e storeFile
+    fi
+
+    if [[ -z "$storePassword" ]]; then
+        echo "请输入签名密码:"
+        read -s storePassword    
+    fi
+    if [[ -z "$keyAlias" ]]; then
+        echo "请输入key的别名:" 
+        read keyAlias
+    fi    
+
+    if [[ -z "$keyPassword" ]]; then
+        echo "请输入key的密码:"
+        read  -s keyPassword
     fi
 
     if [[ "$repeatSigner" != "true" ]]; then
