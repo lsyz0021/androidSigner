@@ -54,6 +54,8 @@ repeatSigner=false
 searchKey=app-release*.apk
 #指定搜索目录，"."代表当前目录，不设置此值默认为当前目录
 searchPath=.
+#指定的apk文件
+sourceApkPath=apk/app-release-01.apk
 #指定输出目录，不设置默认为当前目录下的out目录
 outPath=./out
 ```
