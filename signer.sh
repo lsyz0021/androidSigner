@@ -12,6 +12,7 @@ repeatSigner="false" # 是否重复签名，，已完成签名的apk名字上会
 searchKey="*.apk"
 configSearchPath="" # 指定搜索的目录，不指定默认问当前目录
 configOutPath="" # 指定签名完的apk输出目录，不指定默认为当前目录下的out目录
+sourceApkPath="" 
 
 tatalTimes=0 # 总的签名次数
 errorTimes=0 # 失败的签名次数
@@ -43,6 +44,7 @@ function getConfigFileInfo()
     searchKey=`cat $configPath | grep searchKey | awk -F'=' '{ print $2 }' | sed s/[[:space:]]//g`
     configSearchPath=`cat $configPath | grep searchPath | awk -F'=' '{ print $2 }' | sed s/[[:space:]]//g`
     configOutPath=`cat $configPath | grep outPath | awk -F'=' '{ print $2 }' | sed s/[[:space:]]//g`
+    sourceApkPath=`cat $configPath | grep sourceApkPath | awk -F'=' '{ print $2 }' | sed s/[[:space:]]//g`
 
     # 检查命令行目录是否存在
     if [[ ! -d "${androidCommandPath}" ]]; then
@@ -217,11 +219,10 @@ function getApk()
         findApk $findPath $searchKey
     elif [[ "$auto" == "false" ]]; then
          # 2、手动指定apk路径
-        echo -e "\n${configPath}中设置auto=false，需要手动输入apk路径"
-        echo -e "如果想自动搜索目录下的apk，请在${configPath}中配置auto=true\n"
+        echo "\n${configPath}中设置auto=false，需要手动输入apk路径"
+        echo "如果想自动搜索目录下的apk，请在${configPath}中配置auto=true\n"
         
-        read -p "请输入要签名apk的路径：" -e inputApkPath
-        findApkArray[0]=$inputApkPath #手动指定apk
+        findApkArray[0]=$sourceApkPath #手动指定apk
     else
         # auto!=false或者auto!=true，就会执行这里
         echo -e "\n---------------提示----------------"
